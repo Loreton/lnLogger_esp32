@@ -55,12 +55,15 @@ dkms.conf
 
 # by Loreto
 # va bene sia */.pio/ che .pio/ anche se su sotto directory
+.pio/
+AIQuestions/
+.venv
+
 *.o
 *.obj
 **/build/*
 .activate
 .lnactivate
-.piorun
-.venv
+# .piorun
 *ssids*.h
 

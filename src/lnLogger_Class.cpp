@@ -1,8 +1,9 @@
 /*
 // updated by ...: Loreto Notarantonio
-// Date .........: 11-09-2025 14.29.00
+// Date .........: 19-02-2026 15.59.37
 */
 
+// >>>lnLogger_Class.cpp
 #include <Arduino.h>
 #include <ESP32Time.h> // ESP32Time.cpp
 #include <freertos/semphr.h> // Required here for mutex implementation
@@ -20,7 +21,8 @@ ESP32Logger::ESP32Logger(void) { // Changed class name
 };
 
 // Used so I can send a message if I can't initialize the mutex
-void ESP32Logger::init() { // Changed class name
+void ESP32Logger::init(const uint8_t filename_buffer_len) { // Changed class name
+    m_FILENAME_BUFFER_LENGTH = filename_buffer_len;
     if (!m_mutexInitialized) {
         m_logMutex = xSemaphoreCreateMutex();
         if (m_logMutex == NULL) {
@@ -86,6 +88,7 @@ const char* ESP32Logger::msecToHMS(uint32_t millisec, bool withMilliSec, bool st
  * @return A constant string containing the formatted file name, function name and line number.
  */
 
+#if 0
 // per eventuali test:
 //     /media/loreto/LnDisk_SD_ext4/Filu/GIT-REPO/c-cpp/variEsempi/formatLogFname.cpp
 const char* ESP32Logger::getFileLineInfo(char *outBUFFER, const uint16_t outBUFFER_SIZE, const char* file, const char* function, int line) {
@@ -120,12 +123,14 @@ const char* ESP32Logger::getFileLineInfo(char *outBUFFER, const uint16_t outBUFF
         }
         *ptr++ = filename[j]; // riempi con il carattere di padding
     }
-    *ptr++ = '.'; // separator file.function
 
 
-    // --- copiamo function name to outBUFFER
-    for (j = 0; function[j] != '\0' && *ptr != '\0'; j++) {  // --- verifichiamo anche non superare il limite del buffer '\0' messo precedentemente
-        *ptr++ = function[j];
+    if (fIncludeFunction) {
+        // --- copiamo function name to outBUFFER
+        *ptr++ = '.'; // separator file.function
+        for (j = 0; function[j] != '\0' && *ptr != '\0'; j++) {  // --- verifichiamo anche non superare il limite del buffer '\0' messo precedentemente
+            *ptr++ = function[j];
+        }
     }
 
 
@@ -140,6 +145,69 @@ const char* ESP32Logger::getFileLineInfo(char *outBUFFER, const uint16_t outBUFF
 
     return outBUFFER;
 }
+#endif
+const char* ESP32Logger::getFileLineInfo(char *outBUFFER, const uint16_t outBUFFER_SIZE, const char* file, const char* function, int line) {
+    if (outBUFFER == nullptr || outBUFFER_SIZE == 0) return "";
+
+    // --- CONFIGURAZIONE ---
+    const char paddingChar = ' '; // <--- Cambia questo per modificare il look
+    const char file_funct_separator   = '.'; // Separatore tra funzione e file
+    const uint16_t outBUFFER_LEN = outBUFFER_SIZE - 1;
+
+    // 1. Estrai e pulisci il nome del file (stop a '_' o '.')
+    const char *filenameStart = strrchr(file, '/');
+    filenameStart = filenameStart ? filenameStart + 1 : file;
+
+    char cleanFilename[32];
+    uint8_t cleanFileLen = 0;
+    for (cleanFileLen = 0; cleanFileLen < sizeof(cleanFilename) - 1; cleanFileLen++) {
+        char c = filenameStart[cleanFileLen];
+        // if (c == '\0' || c == '_' || c == '.') break; //.... altrimenti mi taglia il nome del file tio _Class
+        if (c == '\0' || c == '.') break;
+        cleanFilename[cleanFileLen] = c;
+    }
+    cleanFilename[cleanFileLen] = '\0';
+
+    // 2. Prepara la stringa della riga (es: ":054")
+    char lineBuff[10];
+    int lineLen = snprintf(lineBuff, sizeof(lineBuff), ":%03d", line);
+
+    // 3. Calcola lunghezze per l'allineamento a destra
+    uint8_t funcPartLen = fIncludeFunction ? (strlen(function) + 1) : 0; // +1 per il separatore
+    uint16_t totalTextLen = funcPartLen + cleanFileLen + lineLen;
+
+    // 4. Reset buffer con il carattere di padding scelto
+    memset(outBUFFER, paddingChar, outBUFFER_LEN);
+    outBUFFER[outBUFFER_LEN] = '\0';
+
+    // 5. Calcola punto di inizio (Offset)
+    int16_t startPos = outBUFFER_LEN - totalTextLen;
+    if (startPos < 0) startPos = 0;
+
+    char *ptr = outBUFFER + startPos;
+
+    // 6. Copia i componenti (con protezione overflow)
+    // A. Funzione
+    if (fIncludeFunction) {
+        for (int i = 0; function[i] != '\0' && (ptr - outBUFFER) < outBUFFER_LEN; i++) {
+            *ptr++ = function[i];
+        }
+        if ((ptr - outBUFFER) < outBUFFER_LEN) *ptr++ = file_funct_separator;
+    }
+
+    // B. Filename
+    for (int i = 0; i < cleanFileLen && (ptr - outBUFFER) < outBUFFER_LEN; i++) {
+        *ptr++ = cleanFilename[i];
+    }
+
+    // C. Linea
+    for (int i = 0; i < lineLen && (ptr - outBUFFER) < outBUFFER_LEN; i++) {
+        *ptr++ = lineBuff[i];
+    }
+
+    return outBUFFER;
+}
+
 
 
 /**
@@ -172,8 +240,10 @@ void ESP32Logger::write(const char* color, const char* tag, const char* file, co
         // const uint8_t fname_SIZE   = 30;
         // const uint16_t logLine_SIZE = 512;
         char nowTimeBUFFER[16];
-        char fnameBUFFER[32];
+        // const uint8_t fnameBUFFER_len = fIncludeFunction ? 32 : 16; // +1 per il separatore
+        char fnameBUFFER[m_FILENAME_BUFFER_LENGTH];
         char logLineBUFFER[512];
+
 
         va_list args;
         va_start(args, format);
@@ -207,4 +277,4 @@ void ESP32Logger::write(const char* color, const char* tag, const char* file, co
     }
 }
 
-ESP32Logger lnLog; // Changed class name
+ESP32Logger lnLog; // Definizione oggetto lnLog

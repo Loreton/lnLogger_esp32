@@ -1,3 +1,12 @@
+//
+// updated by ...: Loreto Notarantonio
+// Date .........: 22-02-2026 16.04.22
+//
+
+
+
+// #ifdef __ln_MODULE_DEBUG_TEST__
+
 #include <stdio.h>
 #include <stdbool.h>
 #define uint32_t unsigned long
@@ -42,3 +51,5 @@ int main() {
 
     return 0;
 }
+
+// #endif
