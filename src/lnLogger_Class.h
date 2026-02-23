@@ -29,10 +29,10 @@
 class ESP32Logger { // Renamed from ESP32LoggerMutex for simplicity and clarity
     public:
         ESP32Logger(void);
-        void init(const uint8_t filename_buffer_len=20);
+        void init(const uint8_t line_buffer_len=128, const uint8_t filename_buffer_len=20);
         void write(const char* color, const char* tag, const char* file, const char* function, int line, const char* format, ...);
         const char* msecToHMS(char *buffer, uint8_t buffer_len, uint32_t millisec, bool addMilliSec=false, bool stripHeader=false);
-        const char* msecToHMS(uint32_t millisec, bool withMilliSec=false, bool stripHours=false); // usa un buffer interno
+        // const char* msecToHMS(uint32_t millisec, bool withMilliSec=false, bool stripHours=false); // usa un buffer interno ma non safety
         // const char* secToHMS(uint32_t millisec, bool stripHours=false); // usa un buffer interno
 
     private:
@@ -40,6 +40,7 @@ class ESP32Logger { // Renamed from ESP32LoggerMutex for simplicity and clarity
         struct tm      m_timeinfo;
         char sharedTimeBUFFER[16];
         bool fIncludeFunction=false; // log -> filename.function:linno
+        uint8_t m_LINE_BUFFER_LENGTH; // spazio dedicato tutta la riga di log
         uint8_t m_FILENAME_BUFFER_LENGTH; // spazio dedicato a -> [filename.function:linno]
 
         bool m_mutexInitialized = false;
@@ -106,7 +107,7 @@ extern ESP32Logger lnLog; // defined in lnLogger_Class.cpp
     // they expand to `do {} while(0)` to generate no code.
     #if LOG_MODULE_LEVEL >= LOG_LEVEL_SPECIAL
         // #define LOG_SPEC(fmt, ...)     lnLog.write(LogColors::BLUEH, "SPC", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
-        #define LOG_SPEC(fmt, ...)     lnLog.write(LogColors::BLUEH, "SPC", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
+        #define LOG_SPEC(fmt, ...)     lnLog.write(LogColors::BLUEH, "SPEC", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
         // #define log_spec LOG_SPEC
     #else
         #define LOG_SPEC(...) do {} while (0)
@@ -114,7 +115,7 @@ extern ESP32Logger lnLog; // defined in lnLogger_Class.cpp
     #endif
 
     #if LOG_MODULE_LEVEL >= LOG_LEVEL_ERROR
-        #define LOG_ERROR(fmt, ...)    lnLog.write(LogColors::REDH, "ERR", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
+        #define LOG_ERROR(fmt, ...)    lnLog.write(LogColors::REDH, "ERRO", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
         // #define log_error LOG_ERROR
     #else
         #define LOG_ERROR(...) do {} while (0)
@@ -122,7 +123,7 @@ extern ESP32Logger lnLog; // defined in lnLogger_Class.cpp
     #endif
 
     #if LOG_MODULE_LEVEL >= LOG_LEVEL_WARN
-        #define LOG_WARN(fmt, ...)     lnLog.write(LogColors::YELLOWH, "WRN", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
+        #define LOG_WARN(fmt, ...)     lnLog.write(LogColors::YELLOWH, "WARN", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
         // #define log_warn LOG_WARN
     #else
         #define LOG_WARN(...) do {} while (0)
@@ -131,7 +132,7 @@ extern ESP32Logger lnLog; // defined in lnLogger_Class.cpp
 
 
     #if LOG_MODULE_LEVEL >= LOG_LEVEL_INFO
-        #define LOG_INFO(fmt, ...)     lnLog.write(LogColors::GREENH, "INF", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
+        #define LOG_INFO(fmt, ...)     lnLog.write(LogColors::GREENH, "INFO", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
         // #define log_info LOG_INFO
     #else
         #define LOG_INFO(...) do {} while (0)
@@ -139,7 +140,7 @@ extern ESP32Logger lnLog; // defined in lnLogger_Class.cpp
     #endif
 
     #if LOG_MODULE_LEVEL >= LOG_LEVEL_NOTIFY
-        #define LOG_NOTIFY(fmt, ...)  lnLog.write(LogColors::PURPLEH, "NFY", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
+        #define LOG_NOTIFY(fmt, ...)  lnLog.write(LogColors::PURPLEH, "NTFY", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
         // #define log_notify LOG_NOTIFY
     #else
         #define LOG_NOTIFY(...) do {} while (0)
@@ -147,7 +148,7 @@ extern ESP32Logger lnLog; // defined in lnLogger_Class.cpp
     #endif
 
     #if LOG_MODULE_LEVEL >= LOG_LEVEL_DEBUG
-        #define LOG_DEBUG(fmt, ...)    lnLog.write(LogColors::CYANH, "DBG", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
+        #define LOG_DEBUG(fmt, ...)    lnLog.write(LogColors::CYANH, "DEBG", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
         // #define log_debug LOG_DEBUG
     #else
         #define LOG_DEBUG(...) do {} while (0)
@@ -155,13 +156,13 @@ extern ESP32Logger lnLog; // defined in lnLogger_Class.cpp
     #endif
 
     #if LOG_MODULE_LEVEL >= LOG_LEVEL_TRACE
-        #define LOG_TRACE(fmt, ...)    lnLog.write(LogColors::WHITEH, "TRC", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
+        #define LOG_TRACE(fmt, ...)    lnLog.write(LogColors::WHITEH, "TRAC", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
         // #define log_trace LOG_TRACE
     #else
         #define LOG_TRACE(...) do {} while (0)
         // #define log_trace LOG_TRACE
     #endif
 
-    #undef LOG_MODULE_LEVEL
+    // #undef LOG_MODULE_LEVEL
 
     // #endif  // end else del NO_MODULE_LOG

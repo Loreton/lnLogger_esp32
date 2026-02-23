@@ -47,7 +47,9 @@ int main() {
     uint32_t m_elapsed=411;
     printf("Try programiz.pro\n");
     printf("\telapsed: %lu - next level in: %lu\n", m_elapsed, ms_to_next_level);
-    printf("\telapsed: %s - next level in: %s\n", getTimeStamp(true, m_elapsed), getTimeStamp(true, ms_to_next_level));
+    // printf("\telapsed: %s - next level in: %s\n", getTimeStamp(true, m_elapsed), getTimeStamp(true, ms_to_next_level)); // NON va bene
+    printf("\telapsed: %s - next level in: ", getTimeStamp(true, m_elapsed)); // non posso avere du getTimeStamp sullo stesso statement perche il vale sarà il medesimo
+    printf("%s\n", getTimeStamp(true, ms_to_next_level)); // NON va bene
 
     return 0;
 }

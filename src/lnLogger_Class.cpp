@@ -10,7 +10,7 @@
 
 #include <lnLogger_Class.h> // Changed to new header file name
 
-ESP32Time       this_rtc;
+// ESP32Time       this_rtc;
 
 
 // Constructor: Initializes the mutex
@@ -21,8 +21,9 @@ ESP32Logger::ESP32Logger(void) { // Changed class name
 };
 
 // Used so I can send a message if I can't initialize the mutex
-void ESP32Logger::init(const uint8_t filename_buffer_len) { // Changed class name
+void ESP32Logger::init(const uint8_t line_buffer_len, const uint8_t filename_buffer_len) { // Changed class name
     m_FILENAME_BUFFER_LENGTH = filename_buffer_len;
+    m_LINE_BUFFER_LENGTH = line_buffer_len;
     if (!m_mutexInitialized) {
         m_logMutex = xSemaphoreCreateMutex();
         if (m_logMutex == NULL) {
@@ -68,9 +69,12 @@ const char* ESP32Logger::msecToHMS(char *buffer, uint8_t buffer_len, uint32_t mi
     return buffer;
 }
 
-const char* ESP32Logger::msecToHMS(uint32_t millisec, bool withMilliSec, bool stripHours) {
-    return msecToHMS(sharedTimeBUFFER, sizeof(sharedTimeBUFFER), millisec, withMilliSec, stripHours);
-}
+
+// **Problema:** Se due task chiamano `msecToHMS` contemporaneamente (non tramite `write`, ma direttamente), useranno entrambi `sharedTimeBUFFER`, portando a una "race condition".
+// **Soluzione:** Poiché il buffer è piccolo (16 byte), potresti considerare di non usare un buffer di classe, ma restituire una `String` (meno efficiente) o obbligare l'utente a passare un buffer locale (come fai nella versione sovraccaricata).
+// const char* ESP32Logger::msecToHMS_to_be_removed(uint32_t millisec, bool withMilliSec, bool stripHours) {
+//     return msecToHMS(sharedTimeBUFFER, sizeof(sharedTimeBUFFER), millisec, withMilliSec, stripHours);
+// }
 
 
 // const char* ESP32Logger::secToHMS(uint32_t seconds, bool stripHours) {
@@ -88,64 +92,8 @@ const char* ESP32Logger::msecToHMS(uint32_t millisec, bool withMilliSec, bool st
  * @return A constant string containing the formatted file name, function name and line number.
  */
 
-#if 0
-// per eventuali test:
-//     /media/loreto/LnDisk_SD_ext4/Filu/GIT-REPO/c-cpp/variEsempi/formatLogFname.cpp
-const char* ESP32Logger::getFileLineInfo(char *outBUFFER, const uint16_t outBUFFER_SIZE, const char* file, const char* function, int line) {
-    const uint16_t outBUFFER_LEN = outBUFFER_SIZE-1; // per sicurezza prendiamo l'ultimo byte per lo '\0'
-
-    // Estrai il nome del file (senza percorso)
-    const char *filename = strrchr(file, '/');
-    filename = filename ? filename + 1 : file;
-
-    const char paddingChar      = '.'; // carattere di padding
-    const uint8_t func_len      = strlen(function);
-    const uint8_t line_len      = 1 + 3; // 1 per ':' + 3 per il numero di riga
-    const uint8_t fixed_len     = func_len + line_len  + 1;
-    const uint8_t file_len      = outBUFFER_LEN - fixed_len; // 1 per il terminatore '\0'
-
-    char lineBuff[line_len+1]; // spazio per '\0'
-    snprintf(lineBuff, sizeof(lineBuff) ,":%03d", line); // snprintf() scrive al massimo n-1 caratteri più il terminatore nul (\0) in dest.
 
 
-    int8_t j;
-
-    // --- fill in buffer whith paddingChar
-    for (j = 0; j < outBUFFER_LEN; j++) { outBUFFER[j] = paddingChar; }
-    outBUFFER[outBUFFER_LEN] = '\0'; // terminatore buffer
-
-
-    // copiamo nome del file in outBUFFER
-    char *ptr = outBUFFER;
-    for (j = 0; j < file_len && *ptr != '\0'; j++) { // --- verifichiamo anche non superare il limite del buffer '\0' messo precedentemente
-        if (filename[j] == '\0' || filename[j] == '_' || filename[j] == '.') {
-            break;
-        }
-        *ptr++ = filename[j]; // riempi con il carattere di padding
-    }
-
-
-    if (fIncludeFunction) {
-        // --- copiamo function name to outBUFFER
-        *ptr++ = '.'; // separator file.function
-        for (j = 0; function[j] != '\0' && *ptr != '\0'; j++) {  // --- verifichiamo anche non superare il limite del buffer '\0' messo precedentemente
-            *ptr++ = function[j];
-        }
-    }
-
-
-
-    // --- copiamo function name to outBUFFER
-    ptr = &outBUFFER[outBUFFER_LEN - line_len];
-    for (j = 0; lineBuff[j] != '\0' && *ptr != '\0'; j++) {  // --- verifichiamo anche non superare il limite del buffer '\0' messo precedentemente
-        *ptr++ = lineBuff[j];
-    }
-   // *ptr = '\0'; // terminatore della stringa (per sicurezza.....)
-
-
-    return outBUFFER;
-}
-#endif
 const char* ESP32Logger::getFileLineInfo(char *outBUFFER, const uint16_t outBUFFER_SIZE, const char* file, const char* function, int line) {
     if (outBUFFER == nullptr || outBUFFER_SIZE == 0) return "";
 
@@ -236,13 +184,10 @@ void ESP32Logger::write(const char* color, const char* tag, const char* file, co
 
     // Try to acquire the mutex. Wait indefinitely (portMAX_DELAY) if it's already locked.
     if (m_logMutex != NULL && xSemaphoreTake(m_logMutex, portMAX_DELAY) == pdTRUE) {
-        // const uint8_t nowTIME_SIZE = 16;
-        // const uint8_t fname_SIZE   = 30;
-        // const uint16_t logLine_SIZE = 512;
+
         char nowTimeBUFFER[16];
-        // const uint8_t fnameBUFFER_len = fIncludeFunction ? 32 : 16; // +1 per il separatore
         char fnameBUFFER[m_FILENAME_BUFFER_LENGTH];
-        char logLineBUFFER[512];
+        char logLineBUFFER[m_LINE_BUFFER_LENGTH];
 
 
         va_list args;
@@ -250,17 +195,34 @@ void ESP32Logger::write(const char* color, const char* tag, const char* file, co
         int len = vsnprintf(logLineBUFFER, sizeof(logLineBUFFER), format, args);
         va_end(args);
 
-        if (len >= sizeof(logLineBUFFER)) {
-            logLineBUFFER[sizeof(logLineBUFFER)-1] = '\0';  // EOS
+
+        if (false) { // lo tengo perché funzionava senza problemi....ma forse non necessario
+            if (len >= sizeof(logLineBUFFER)) {
+                logLineBUFFER[sizeof(logLineBUFFER)-1] = '\0';  // EOS
+            }
+
+            struct tm timeinfo = rtc.getTimeStruct();
+            snprintf(nowTimeBUFFER, sizeof(nowTimeBUFFER), "%02d:%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec); // snprintf() scrive al massimo n-1 caratteri più il terminatore nul (\0) in dest.
+        }
+        else {
+            // Ottenimento orario dall'oggetto RTC della classe (rtc, non this_rtc)
+            // rtc.getTime() restituisce "HH:MM:SS"
+            snprintf(nowTimeBUFFER, sizeof(nowTimeBUFFER), "%s", rtc.getTime().c_str());
         }
 
-        struct tm timeinfo = this_rtc.getTimeStruct();
-        snprintf(nowTimeBUFFER, sizeof(nowTimeBUFFER), "%02d:%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec); // snprintf() scrive al massimo n-1 caratteri più il terminatore nul (\0) in dest.
-
-        Serial.printf("%s[%s][%s][%s] %s%s\n",
-                      color,
+        // Serial.printf("%s[%s][%s][%-4s] %s%s\n",
+        //               color,
+        //               nowTimeBUFFER,
+        //               this->getFileLineInfo(fnameBUFFER, sizeof(fnameBUFFER), file, function, line),
+        //               tag,
+        //               logLineBUFFER,
+        //               LogColors::RESET);
+        // coloriamo solo il testo
+        Serial.printf("%s[%s][%s]%s[%-4s] %s%s\n",
+                      LogColors::GREEN,
                       nowTimeBUFFER,
                       this->getFileLineInfo(fnameBUFFER, sizeof(fnameBUFFER), file, function, line),
+                      color,
                       tag,
                       logLineBUFFER,
                       LogColors::RESET);
@@ -272,9 +234,46 @@ void ESP32Logger::write(const char* color, const char* tag, const char* file, co
         // You might still print a basic message to not lose the log,
         // but it won't be thread-safe.
         Serial.printf("!!! Failed to acquire log mutex or mutex not initialized: ");
-        // Serial.printf(format, ##__VA_ARGS__); // Print the original unformatted message
         Serial.println();
     }
 }
+
+
+// void ESP32Logger::write(const char* color, const char* tag, const char* file, const char* function, int line, const char* format, ...) {
+//     if (!m_mutexInitialized) {
+//         // Fallback se dimentichi lnLog.init()
+//         Serial.println("ERR: Logger non inizializzato! Chiama lnLog.init().");
+//         return;
+//     }
+
+//     if (m_logMutex != NULL && xSemaphoreTake(m_logMutex, portMAX_DELAY) == pdTRUE) {
+
+//         char nowTimeBUFFER[20]; // Leggermente più largo per sicurezza
+//         char fnameBUFFER[m_FILENAME_BUFFER_LENGTH];
+//         char logLineBUFFER[m_LINE_BUFFER_LENGTH];
+
+//         // 1. Formattazione del messaggio utente
+//         va_list args;
+//         va_start(args, format);
+//         vsnprintf(logLineBUFFER, sizeof(logLineBUFFER), format, args);
+//         va_end(args);
+
+//         // 2. Ottenimento orario dall'oggetto RTC della classe (rtc, non this_rtc)
+//         // rtc.getTime() restituisce "HH:MM:SS"
+//         snprintf(nowTimeBUFFER, sizeof(nowTimeBUFFER), "%s", rtc.getTime().c_str());
+
+//         // 3. Stampa atomica
+//         Serial.printf("%s[%s][%s][%-4s] %s%s\n",
+//                       color,
+//                       nowTimeBUFFER,
+//                       this->getFileLineInfo(fnameBUFFER, sizeof(fnameBUFFER), file, function, line),
+//                       tag,
+//                       logLineBUFFER,
+//                       LogColors::RESET);
+
+//         xSemaphoreGive(m_logMutex);
+//     }
+// }
+
 
 ESP32Logger lnLog; // Definizione oggetto lnLog

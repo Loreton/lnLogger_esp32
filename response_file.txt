@@ -1,0 +1,99 @@
+Certamente. L'incongruenza a cui mi riferivo riguarda solitamente il modo in cui il **Mutex** (o il Task Handle) viene dichiarato e utilizzato: a volte viene dichiarato come variabile globale (fuori dalla classe) ma poi si tenta di usarlo come se fosse un membro della classe, o viceversa.
+
+La soluzione migliore in C++ è l'**incapsulamento completo**. Il Mutex deve essere un membro `private` della classe.
+
+Ecco come correggere il codice seguendo le "best practices" per ESP32:
+
+### 1. La Soluzione: Incapsulamento nel file `.h` o nella classe
+
+Invece di avere un `SemaphoreHandle_t` volante nel file principale, inseriscilo dentro la classe.
+
+```cpp
+#include <Arduino.h>
+
+class MioSensore {
+private:
+    // Il Mutex è un membro privato della classe
+    SemaphoreHandle_t _xMutex;
+    float _ultimoValore;
+
+    // Metodo statico necessario per xTaskCreate
+    static void taskWrapper(void* pvParameters) {
+        MioSensore* instance = (MioSensore*)pvParameters;
+        instance->runTask();
+    }
+
+    void runTask() {
+        while (true) {
+            float lettura = analogRead(34); // Esempio
+            
+            // PROTEZIONE DEI DATI
+            if (xSemaphoreTake(_xMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
+                _ultimoValore = lettura;
+                xSemaphoreGive(_xMutex);
+            }
+            vTaskDelay(pdMS_TO_TICKS(1000));
+        }
+    }
+
+public:
+    MioSensore() {
+        // Inizializzazione del Mutex nel costruttore
+        _xMutex = xSemaphoreCreateMutex();
+        _ultimoValore = 0;
+    }
+
+    void begin() {
+        if (_xMutex != NULL) {
+            xTaskCreate(
+                taskWrapper,   // Funzione wrapper
+                "TaskSensore", // Nome task
+                2048,          // Stack
+                this,          // Passiamo l'istanza corrente (this)
+                1,             // Priorità
+                NULL           // Handle (opzionale)
+            );
+        }
+    }
+
+    float getValore() {
+        float temp = 0;
+        // PROTEZIONE DEI DATI in lettura
+        if (xSemaphoreTake(_xMutex, pdMS_TO_TICKS(50)) == pdTRUE) {
+            temp = _ultimoValore;
+            xSemaphoreGive(_xMutex);
+        }
+        return temp;
+    }
+};
+```
+
+### Cosa è stato sistemato (I punti chiave):
+
+1.  **Scope del Mutex:** `_xMutex` non è più una variabile globale. Ora appartiene all'oggetto. Questo ti permette di creare più istanze della stessa classe senza che i Mutex si "incrocino".
+2.  **Inizializzazione corretta:** Il Mutex viene creato con `xSemaphoreCreateMutex()` dentro il costruttore. **Errore comune da evitare:** Non dichiarare `SemaphoreHandle_t _xMutex = xSemaphoreCreateMutex();` a livello di riga di classe, perché l'ordine di inizializzazione dell'hardware su ESP32 potrebbe causare crash. Fallo nel costruttore o nel `begin()`.
+3.  **Il "Task Wrapper":** Poiché `xTaskCreate` è una funzione C e non capisce i metodi delle classi C++, abbiamo usato un metodo `static` (`taskWrapper`) che riceve il puntatore `this` e richiama il metodo interno della classe.
+4.  **Sicurezza (Thread-Safe):** Sia chi scrive il dato (il task interno) sia chi lo legge (`getValore()`) usano lo **stesso** Mutex membro della classe.
+
+### Come usarlo nel `main.cpp`:
+
+```cpp
+MioSensore sensore;
+
+void setup() {
+    Serial.begin(115200);
+    sensore.begin(); // Avvia il task interno
+}
+
+void loop() {
+    // Legge il dato in modo sicuro ogni 2 secondi
+    float dato = sensore.getValore();
+    Serial.printf("Valore sensore: %.2f\n", dato);
+    delay(2000);
+}
+```
+
+### Perché questa è la soluzione definitiva?
+*   **Pulizia:** Il file principale (`main.cpp`) non deve sapere nulla di Mutex o Task. Chiama solo `getValore()`.
+*   **Modularità:** Se hai due sensori uguali, basta scrivere `MioSensore s1; MioSensore s2;`. Ognuno avrà il suo Mutex e il suo Task indipendente senza conflitti tra variabili globali.
+*   **Robustezza:** Eviti l'errore dove un task cerca di prendere un Mutex che non è ancora stato inizializzato (perché ora è tutto gestito nel ciclo di vita della classe).
