@@ -18,11 +18,11 @@ void setup() {
 
 
 void loop() {
-    LOG_INFO("This is an info message.");
-    LOG_WARN("Something might be wrong here: %d", 42);
-    LOG_ERROR("ERROR occurred in file %s at line %d", __FILE__, __LINE__);
-    LOG_DEBUG("Debugging variable value: %s", VAR_NAME_VALUE(some_variable));
-    // LOG_CRITICAL("CRITICAL variable value: %s", VAR_NAME_VALUE(some_variable));
+    lnLOG_INFO("This is an info message.");
+    lnLOG_WARN("Something might be wrong here: %d", 42);
+    lnLOG_ERROR("ERROR occurred in file %s at line %d", __FILE__, __LINE__);
+    lnLOG_DEBUG("Debugging variable value: %s", VAR_NAME_VALUE(some_variable));
+    // lnLOG_CRITICAL("CRITICAL variable value: %s", VAR_NAME_VALUE(some_variable));
     delay(1000);
 }
 
