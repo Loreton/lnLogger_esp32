@@ -109,60 +109,60 @@ extern ESP32Logger lnLog; // defined in lnLogger_Class.cpp
     // they expand to `do {} while(0)` to generate no code.
     #if LOG_MODULE_LEVEL >= LOG_LEVEL_SPECIAL
         // #define LOG_SPEC(fmt, ...)     lnLog.write(LogColors::BLUEH, "SPC", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
-        #define lnLog_SPEC(fmt, ...)     lnLog.write(LogColors::BLUEH, "SPEC", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
-        // #define log_spec LOG_SPEC
+        #define lnLOG_SPEC(fmt, ...)     lnLog.write(LogColors::BLUEH, "SPEC", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
+        #define lnlog_spec lnLOG_SPEC
     #else
-        #define lnLog_SPEC(...) do {} while (0)
-        // #define log_spec lnLog_SPEC
+        #define lnLOG_SPEC(...) do {} while (0)
+        #define lnlog_spec lnLOG_SPEC
     #endif
 
     #if LOG_MODULE_LEVEL >= LOG_LEVEL_ERROR
-        #define lnLog_ERROR(fmt, ...)    lnLog.write(LogColors::REDH, "ERRO", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
-        // #define log_error lnLog_ERROR
+        #define lnLOG_ERROR(fmt, ...)    lnLog.write(LogColors::REDH, "ERRO", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
+        #define lnlog_error lnLOG_ERROR
     #else
-        #define lnLog_ERROR(...) do {} while (0)
-        // #define log_error lnLog_ERROR
+        #define lnLOG_ERROR(...) do {} while (0)
+        #define lnlog_error lnLOG_ERROR
     #endif
 
     #if LOG_MODULE_LEVEL >= LOG_LEVEL_WARN
-        #define lnLog_WARN(fmt, ...)     lnLog.write(LogColors::YELLOWH, "WARN", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
-        // #define log_warn lnLog_WARN
+        #define lnLOG_WARN(fmt, ...)     lnLog.write(LogColors::YELLOWH, "WARN", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
+        #define lnlog_warn lnLOG_WARN
     #else
-        #define lnLog_WARN(...) do {} while (0)
-        // #define log_warn lnLog_WARN
+        #define lnLOG_WARN(...) do {} while (0)
+        #define lnlog_warn lnLOG_WARN
     #endif
 
 
     #if LOG_MODULE_LEVEL >= LOG_LEVEL_INFO
-        #define lnLog_INFO(fmt, ...)     lnLog.write(LogColors::GREENH, "INFO", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
-        // #define log_info lnLog_INFO
+        #define lnLOG_INFO(fmt, ...)     lnLog.write(LogColors::GREENH, "INFO", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
+        #define lnlog_info lnLOG_INFO
     #else
-        #define lnLog_INFO(...) do {} while (0)
-        // #define log_info lnLog_INFO
+        #define lnLOG_INFO(...) do {} while (0)
+        #define lnlog_info lnLOG_INFO
     #endif
 
     #if LOG_MODULE_LEVEL >= LOG_LEVEL_NOTIFY
-        #define lnLog_NOTIFY(fmt, ...)  lnLog.write(LogColors::PURPLEH, "NTFY", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
-        // #define log_notify lnLog_NOTIFY
+        #define lnLOG_NOTIFY(fmt, ...)  lnLog.write(LogColors::PURPLEH, "NTFY", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
+        #define lnlog_notify lnLOG_NOTIFY
     #else
-        #define lnLog_NOTIFY(...) do {} while (0)
-        // #define log_notify lnLog_NOTIFY
+        #define lnLOG_NOTIFY(...) do {} while (0)
+        #define lnlog_notify lnLOG_NOTIFY
     #endif
 
     #if LOG_MODULE_LEVEL >= LOG_LEVEL_DEBUG
-        #define lnLog_DEBUG(fmt, ...)    lnLog.write(LogColors::CYANH, "DEBG", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
-        // #define log_debug lnLog_DEBUG
+        #define lnLOG_DEBUG(fmt, ...)    lnLog.write(LogColors::CYANH, "DEBG", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
+        #define lnlog_debug lnLOG_DEBUG
     #else
-        #define lnLog_DEBUG(...) do {} while (0)
-        // #define log_debug lnLog_DEBUG
+        #define lnLOG_DEBUG(...) do {} while (0)
+        #define lnlog_debug lnLOG_DEBUG
     #endif
 
     #if LOG_MODULE_LEVEL >= LOG_LEVEL_TRACE
-        #define lnLog_TRACE(fmt, ...)    lnLog.write(LogColors::WHITEH, "TRAC", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
-        // #define log_trace lnLog_TRACE
+        #define lnLOG_TRACE(fmt, ...)    lnLog.write(LogColors::WHITEH, "TRAC", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
+        #define lnlog_trace lnLOG_TRACE
     #else
-        #define lnLog_TRACE(...) do {} while (0)
-        // #define log_trace lnLog_TRACE
+        #define lnLOG_TRACE(...) do {} while (0)
+        #define lnlog_trace lnLOG_TRACE
     #endif
 
     // #undef LOG_MODULE_LEVEL
