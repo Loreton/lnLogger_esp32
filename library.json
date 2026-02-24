@@ -1,8 +1,12 @@
 {
   "name": "lnLogger",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Custom debug and log macros for ESP32 projects.",
-  "keywords": ["log", "debug", "macros"],
+  "keywords": [
+    "log",
+    "debug",
+    "macros"
+  ],
   "authors": [
     {
       "name": "Loreto"
