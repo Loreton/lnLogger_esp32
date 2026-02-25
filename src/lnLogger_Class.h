@@ -109,11 +109,11 @@ extern ESP32Logger lnLog; // defined in lnLogger_Class.cpp
     // they expand to `do {} while(0)` to generate no code.
     #if LOG_MODULE_LEVEL >= LOG_LEVEL_SPECIAL
         // #define LOG_SPEC(fmt, ...)     lnLog.write(LogColors::BLUEH, "SPC", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
-        #define lnLOG_SPEC(fmt, ...)     lnLog.write(LogColors::BLUEH, "SPEC", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
-        #define lnlog_spec lnLOG_SPEC
+        #define lnLOG_SPECIAL(fmt, ...)     lnLog.write(LogColors::BLUEH, "SPEC", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
+        #define lnlog_special lnLOG_SPECIAL
     #else
-        #define lnLOG_SPEC(...) do {} while (0)
-        #define lnlog_spec lnLOG_SPEC
+        #define lnLOG_SPECIAL(...) do {} while (0)
+        #define lnlog_special lnLOG_SPECIAL
     #endif
 
     #if LOG_MODULE_LEVEL >= LOG_LEVEL_ERROR
@@ -125,11 +125,11 @@ extern ESP32Logger lnLog; // defined in lnLogger_Class.cpp
     #endif
 
     #if LOG_MODULE_LEVEL >= LOG_LEVEL_WARN
-        #define lnLOG_WARN(fmt, ...)     lnLog.write(LogColors::YELLOWH, "WARN", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
-        #define lnlog_warn lnLOG_WARN
+        #define lnLOG_WARNING(fmt, ...)     lnLog.write(LogColors::YELLOWH, "WARN", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
+        #define lnlog_warning lnLOG_WARNING
     #else
-        #define lnLOG_WARN(...) do {} while (0)
-        #define lnlog_warn lnLOG_WARN
+        #define lnLOG_WARNING(...) do {} while (0)
+        #define lnlog_warning lnLOG_WARNING
     #endif
 
 
