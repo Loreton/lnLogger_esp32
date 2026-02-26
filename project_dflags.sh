@@ -15,32 +15,38 @@ declare -A LOG_LEVEL_MAP=(
 )
 
 
-ln_TEST=1
-ln_PRODUCTION=2
-
-ln_ESP32_WROOM_32E_MODULE=1
-ln_ESP32_WROOM_32E_MODULE_2RELAY=2
-
 myFlags=""
 
-myFlags="${myFlags} -DLOG_LEVEL_NONE=${LOG_LEVEL_MAP["none"]}"
-myFlags="${myFlags} -DLOG_LEVEL_ERROR=${LOG_LEVEL_MAP["error"]}"
-myFlags="${myFlags} -DLOG_LEVEL_WARN=${LOG_LEVEL_MAP["warn"]}"
-myFlags="${myFlags} -DLOG_LEVEL_SPECIAL=${LOG_LEVEL_MAP["special"]}"
-myFlags="${myFlags} -DLOG_LEVEL_NOTIFY=${LOG_LEVEL_MAP["notify"]}"
-myFlags="${myFlags} -DLOG_LEVEL_INFO=${LOG_LEVEL_MAP["info"]}"
-myFlags="${myFlags} -DLOG_LEVEL_DEBUG=${LOG_LEVEL_MAP["debug"]}"
-myFlags="${myFlags} -DLOG_LEVEL_TRACE=${LOG_LEVEL_MAP["trace"]}"
+### ----- lnLogger flags
+myFlags="${myFlags} -DlnLOG_LEVEL_NONE=${LOG_LEVEL_MAP["none"]}"
+myFlags="${myFlags} -DlnLOG_LEVEL_ERROR=${LOG_LEVEL_MAP["error"]}"
+myFlags="${myFlags} -DlnLOG_LEVEL_WARN=${LOG_LEVEL_MAP["warn"]}"
+myFlags="${myFlags} -DlnLOG_LEVEL_SPECIAL=${LOG_LEVEL_MAP["special"]}"
+myFlags="${myFlags} -DlnLOG_LEVEL_NOTIFY=${LOG_LEVEL_MAP["notify"]}"
+myFlags="${myFlags} -DlnLOG_LEVEL_INFO=${LOG_LEVEL_MAP["info"]}"
+myFlags="${myFlags} -DlnLOG_LEVEL_DEBUG=${LOG_LEVEL_MAP["debug"]}"
+myFlags="${myFlags} -DlnLOG_LEVEL_TRACE=${LOG_LEVEL_MAP["trace"]}"
 
 
-myFlags="${myFlags} -Dln_TIME_CLASS_SECONDS_VECTOR_xx"
-myFlags="${myFlags} -Dln_TIME_CLASS_MINUTESS_VECTOR_xx"
-myFlags="${myFlags} -Dln_TIME_CLASS_HOURS_VECTOR_xx"
+
+### ----- lnTime flags
+myFlags="${myFlags} -Dln_TIME_CLASS_SECONDS_VECTOR"
+myFlags="${myFlags} -Dln_TIME_CLASS_MINUTESS_VECTOR"
+myFlags="${myFlags} -Dln_TIME_CLASS_HOURS_VECTOR"
 
 
+
+### ----- Environment flags
+ln_TEST=1
+ln_PRODUCTION=2
 myFlags="${myFlags} -Dln_TEST=${ln_TEST}"
 myFlags="${myFlags} -Dln_PRODUCTION=${ln_PRODUCTION}"
 
+
+
+### ----- Board type flags
+ln_ESP32_WROOM_32E_MODULE=1
+ln_ESP32_WROOM_32E_MODULE_2RELAY=2
 myFlags="${myFlags} -Dln_ESP32_WROOM_32E_MODULE=${ln_ESP32_WROOM_32E_MODULE}"
 myFlags="${myFlags} -Dln_ESP32_WROOM_32E_MODULE_2RELAY=${ln_ESP32_WROOM_32E_MODULE_2RELAY}"
 

@@ -81,33 +81,36 @@ extern ESP32Logger lnLog; // defined in lnLogger_Class.cpp
 
 
     // Set the global log level
-    #ifndef LOG_LEVEL_DEFAULT
+    #ifndef lnLOG_LEVEL_DEFAULT
+        #define    lnLOG_LEVEL_NONE       0
+        #define    lnLOG_LEVEL_ERROR      1
+        #define    lnLOG_LEVEL_WARN       2
+        #define    lnLOG_LEVEL_SPECIAL    3
+        #define    lnLOG_LEVEL_NOTIFY     4
+        #define    lnLOG_LEVEL_INFO       5
+        #define    lnLOG_LEVEL_DEBUG      6
+        #define    lnLOG_LEVEL_TRACE      7
         // Log Levels --- definiti come BUILD_FLAGS nel file: /home/loreto/filu/lnEnv/start_proc/piorun.sh
         // ma li metto qui nel caso non fossero intercettati correttamente
-        #define    LOG_LEVEL_NONE       0
-        #define    LOG_LEVEL_ERROR      1
-        #define    LOG_LEVEL_WARN       2
-        #define    LOG_LEVEL_SPECIAL    3
-        #define    LOG_LEVEL_NOTIFY     4
-        #define    LOG_LEVEL_INFO       5
-        #define    LOG_LEVEL_DEBUG      6
-        #define    LOG_LEVEL_TRACE      7
-        #pragma message "LOG_LEVEL_DEFAULT not DEFINED. Defaulting to LOG_LEVEL_WARN."
-        #define LOG_LEVEL_DEFAULT LOG_LEVEL_WARN
+        #pragma message "LOG_LEVEL_DEFAULT not DEFINED. Defaulting to lnLOG_LEVEL_WARN."
+        #define lnLOG_LEVEL_DEFAULT lnLOG_LEVEL_WARN
     #endif
 
     // --- per ogni modulo posso decidere il livello di log
-    #ifndef LOG_MODULE_LEVEL
-        #define LOG_MODULE_LEVEL LOG_LEVEL_DEFAULT
+    #ifndef lnLOG_MODULE_LEVEL
+        #define lnLOG_MODULE_LEVEL lnLOG_LEVEL_DEFAULT
+        // #pragma message "LOG_MODULE_LEVEL not_defined"
+    #else
+        #pragma message "LOG_MODULE_LEVEL defined"
     #endif
     // ---
 
 
     // Convenience macros for logging.
-    // These macros check LOG_LEVEL at pre-compilation time
+    // These macros check lnLOG_LEVEL at pre-compilation time
     // and call write only if the level is enabled, otherwise
     // they expand to `do {} while(0)` to generate no code.
-    #if LOG_MODULE_LEVEL >= LOG_LEVEL_SPECIAL
+    #if lnLOG_MODULE_LEVEL >= lnLOG_LEVEL_SPECIAL
         // #define LOG_SPEC(fmt, ...)     lnLog.write(LogColors::BLUEH, "SPC", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
         #define lnLOG_SPECIAL(fmt, ...)     lnLog.write(LogColors::BLUEH, "SPEC", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
         #define lnlog_special lnLOG_SPECIAL
@@ -116,7 +119,7 @@ extern ESP32Logger lnLog; // defined in lnLogger_Class.cpp
         #define lnlog_special lnLOG_SPECIAL
     #endif
 
-    #if LOG_MODULE_LEVEL >= LOG_LEVEL_ERROR
+    #if lnLOG_MODULE_LEVEL >= lnLOG_LEVEL_ERROR
         #define lnLOG_ERROR(fmt, ...)    lnLog.write(LogColors::REDH, "ERRO", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
         #define lnlog_error lnLOG_ERROR
     #else
@@ -124,7 +127,7 @@ extern ESP32Logger lnLog; // defined in lnLogger_Class.cpp
         #define lnlog_error lnLOG_ERROR
     #endif
 
-    #if LOG_MODULE_LEVEL >= LOG_LEVEL_WARN
+    #if lnLOG_MODULE_LEVEL >= lnLOG_LEVEL_WARN
         #define lnLOG_WARNING(fmt, ...)     lnLog.write(LogColors::YELLOWH, "WARN", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
         #define lnlog_warning lnLOG_WARNING
     #else
@@ -133,7 +136,7 @@ extern ESP32Logger lnLog; // defined in lnLogger_Class.cpp
     #endif
 
 
-    #if LOG_MODULE_LEVEL >= LOG_LEVEL_INFO
+    #if lnLOG_MODULE_LEVEL >= lnLOG_LEVEL_INFO
         #define lnLOG_INFO(fmt, ...)     lnLog.write(LogColors::GREENH, "INFO", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
         #define lnlog_info lnLOG_INFO
     #else
@@ -141,7 +144,7 @@ extern ESP32Logger lnLog; // defined in lnLogger_Class.cpp
         #define lnlog_info lnLOG_INFO
     #endif
 
-    #if LOG_MODULE_LEVEL >= LOG_LEVEL_NOTIFY
+    #if lnLOG_MODULE_LEVEL >= lnLOG_LEVEL_NOTIFY
         #define lnLOG_NOTIFY(fmt, ...)  lnLog.write(LogColors::PURPLEH, "NTFY", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
         #define lnlog_notify lnLOG_NOTIFY
     #else
@@ -149,7 +152,7 @@ extern ESP32Logger lnLog; // defined in lnLogger_Class.cpp
         #define lnlog_notify lnLOG_NOTIFY
     #endif
 
-    #if LOG_MODULE_LEVEL >= LOG_LEVEL_DEBUG
+    #if lnLOG_MODULE_LEVEL >= lnLOG_LEVEL_DEBUG
         #define lnLOG_DEBUG(fmt, ...)    lnLog.write(LogColors::CYANH, "DEBG", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
         #define lnlog_debug lnLOG_DEBUG
     #else
@@ -157,7 +160,7 @@ extern ESP32Logger lnLog; // defined in lnLogger_Class.cpp
         #define lnlog_debug lnLOG_DEBUG
     #endif
 
-    #if LOG_MODULE_LEVEL >= LOG_LEVEL_TRACE
+    #if lnLOG_MODULE_LEVEL >= lnLOG_LEVEL_TRACE
         #define lnLOG_TRACE(fmt, ...)    lnLog.write(LogColors::WHITEH, "TRAC", __FILE__, __FUNCTION__ , __LINE__, fmt, ##__VA_ARGS__)
         #define lnlog_trace lnLOG_TRACE
     #else
@@ -165,6 +168,6 @@ extern ESP32Logger lnLog; // defined in lnLogger_Class.cpp
         #define lnlog_trace lnLOG_TRACE
     #endif
 
-    // #undef LOG_MODULE_LEVEL
+    #undef lnLOG_MODULE_LEVEL
 
     // #endif  // end else del NO_MODULE_LOG

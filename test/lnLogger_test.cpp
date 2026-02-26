@@ -12,7 +12,7 @@
 
 void setup() {
     Serial.begin(115200); // Initialize Serial communication
-    lnLog.init(128, 20);         // Initialize the logger's mutex
+    lnLog.init(128, 20);  // line_buffer_len, filename_buffer_len
     // ... rest of your setup code
 }
 
