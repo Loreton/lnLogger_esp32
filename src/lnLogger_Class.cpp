@@ -5,12 +5,11 @@
 
 // >>>lnLogger_Class.cpp
 #include <Arduino.h>
-#include <ESP32Time.h> // ESP32Time.cpp
+#include <time.h>
+
 #include <freertos/semphr.h> // Required here for mutex implementation
 
 #include <lnLogger_Class.h> // Changed to new header file name
-
-// ESP32Time       this_rtc;
 
 
 // Constructor: Initializes the mutex
@@ -70,17 +69,25 @@ const char* ESP32Logger::msecToHMS(char *buffer, uint8_t buffer_len, uint32_t mi
 }
 
 
-// **Problema:** Se due task chiamano `msecToHMS` contemporaneamente (non tramite `write`, ma direttamente), useranno entrambi `sharedTimeBUFFER`, portando a una "race condition".
-// **Soluzione:** Poiché il buffer è piccolo (16 byte), potresti considerare di non usare un buffer di classe, ma restituire una `String` (meno efficiente) o obbligare l'utente a passare un buffer locale (come fai nella versione sovraccaricata).
-// const char* ESP32Logger::msecToHMS_to_be_removed(uint32_t millisec, bool withMilliSec, bool stripHours) {
-//     return msecToHMS(sharedTimeBUFFER, sizeof(sharedTimeBUFFER), millisec, withMilliSec, stripHours);
-// }
+void ESP32Logger::getNowTime(char* buffer, size_t len) {
+    time_t now = time(nullptr);
 
+    if (now < 100000) { // Se NTP non è ancora sincronizzato
+        // fallback su millis()
+        uint32_t s = millis() / 1000;
+        uint8_t hh = (s / 3600) % 24;
+        uint8_t mm = (s / 60) % 60;
+        uint8_t ss = s % 60;
 
-// const char* ESP32Logger::secToHMS(uint32_t seconds, bool stripHours) {
-//     char buffer[12];
-//     return msecToHMS(buffer, 15, seconds*1000UL, false, stripHours);
-// }
+        snprintf(buffer, len, "%02d:%02d:%02d", hh, mm, ss);
+        return;
+    }
+
+    struct tm timeinfo;
+    localtime_r(&now, &timeinfo);
+    strftime(buffer, len, "%H:%M:%S", &timeinfo);
+}
+
 
 
 /**
@@ -91,9 +98,6 @@ const char* ESP32Logger::msecToHMS(char *buffer, uint8_t buffer_len, uint32_t mi
  * @param line The line number (usually __LINE__).
  * @return A constant string containing the formatted file name, function name and line number.
  */
-
-
-
 const char* ESP32Logger::getFileLineInfo(char *outBUFFER, const uint16_t outBUFFER_SIZE, const char* file, const char* function, int line) {
     if (outBUFFER == nullptr || outBUFFER_SIZE == 0) return "";
 
@@ -195,28 +199,8 @@ void ESP32Logger::write(const char* color, const char* tag, const char* file, co
         int len = vsnprintf(logLineBUFFER, sizeof(logLineBUFFER), format, args);
         va_end(args);
 
+        getNowTime(nowTimeBUFFER, sizeof(nowTimeBUFFER));
 
-        if (false) { // lo tengo perché funzionava senza problemi....ma forse non necessario
-            if (len >= sizeof(logLineBUFFER)) {
-                logLineBUFFER[sizeof(logLineBUFFER)-1] = '\0';  // EOS
-            }
-
-            struct tm timeinfo = rtc.getTimeStruct();
-            snprintf(nowTimeBUFFER, sizeof(nowTimeBUFFER), "%02d:%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec); // snprintf() scrive al massimo n-1 caratteri più il terminatore nul (\0) in dest.
-        }
-        else {
-            // Ottenimento orario dall'oggetto RTC della classe (rtc, non this_rtc)
-            // rtc.getTime() restituisce "HH:MM:SS"
-            snprintf(nowTimeBUFFER, sizeof(nowTimeBUFFER), "%s", rtc.getTime().c_str());
-        }
-
-        // Serial.printf("%s[%s][%s][%-4s] %s%s\n",
-        //               color,
-        //               nowTimeBUFFER,
-        //               this->getFileLineInfo(fnameBUFFER, sizeof(fnameBUFFER), file, function, line),
-        //               tag,
-        //               logLineBUFFER,
-        //               LogColors::RESET);
         // coloriamo solo il testo
         Serial.printf("%s[%s][%s]%s[%-4s] %s%s\n",
                       LogColors::GREEN,
@@ -237,43 +221,5 @@ void ESP32Logger::write(const char* color, const char* tag, const char* file, co
         Serial.println();
     }
 }
-
-
-// void ESP32Logger::write(const char* color, const char* tag, const char* file, const char* function, int line, const char* format, ...) {
-//     if (!m_mutexInitialized) {
-//         // Fallback se dimentichi lnLog.init()
-//         Serial.println("ERR: Logger non inizializzato! Chiama lnLog.init().");
-//         return;
-//     }
-
-//     if (m_logMutex != NULL && xSemaphoreTake(m_logMutex, portMAX_DELAY) == pdTRUE) {
-
-//         char nowTimeBUFFER[20]; // Leggermente più largo per sicurezza
-//         char fnameBUFFER[m_FILENAME_BUFFER_LENGTH];
-//         char logLineBUFFER[m_LINE_BUFFER_LENGTH];
-
-//         // 1. Formattazione del messaggio utente
-//         va_list args;
-//         va_start(args, format);
-//         vsnprintf(logLineBUFFER, sizeof(logLineBUFFER), format, args);
-//         va_end(args);
-
-//         // 2. Ottenimento orario dall'oggetto RTC della classe (rtc, non this_rtc)
-//         // rtc.getTime() restituisce "HH:MM:SS"
-//         snprintf(nowTimeBUFFER, sizeof(nowTimeBUFFER), "%s", rtc.getTime().c_str());
-
-//         // 3. Stampa atomica
-//         Serial.printf("%s[%s][%s][%-4s] %s%s\n",
-//                       color,
-//                       nowTimeBUFFER,
-//                       this->getFileLineInfo(fnameBUFFER, sizeof(fnameBUFFER), file, function, line),
-//                       tag,
-//                       logLineBUFFER,
-//                       LogColors::RESET);
-
-//         xSemaphoreGive(m_logMutex);
-//     }
-// }
-
 
 ESP32Logger lnLog; // Definizione oggetto lnLog

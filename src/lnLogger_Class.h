@@ -9,8 +9,6 @@
 
 #include <Arduino.h>
 #include <freertos/semphr.h> // Required for FreeRTOS types (SemaphoreHandle_t)
-#include "esp_timer.h" // For esp_timer_get_time()
-#include <ESP32Time.h> // ESP32Time.cpp
 
 #ifndef fstripHeaderTrue
     #define fMilliSecondsFalse 0
@@ -32,12 +30,8 @@ class ESP32Logger { // Renamed from ESP32LoggerMutex for simplicity and clarity
         void init(const uint8_t line_buffer_len=128, const uint8_t filename_buffer_len=20);
         void write(const char* color, const char* tag, const char* file, const char* function, int line, const char* format, ...);
         const char* msecToHMS(char *buffer, uint8_t buffer_len, uint32_t millisec, bool addMilliSec=false, bool stripHeader=false);
-        // const char* msecToHMS(uint32_t millisec, bool withMilliSec=false, bool stripHours=false); // usa un buffer interno ma non safety
-        // const char* secToHMS(uint32_t millisec, bool stripHours=false); // usa un buffer interno
 
     private:
-        ESP32Time rtc;
-        struct tm      m_timeinfo;
         char sharedTimeBUFFER[16];
         bool fIncludeFunction=false; // log -> filename.function:linno
         uint8_t m_LINE_BUFFER_LENGTH; // spazio dedicato tutta la riga di log
@@ -46,11 +40,13 @@ class ESP32Logger { // Renamed from ESP32LoggerMutex for simplicity and clarity
         bool m_mutexInitialized = false;
         SemaphoreHandle_t m_logMutex = NULL; // The mutex to protect log operations
         const char* getFileLineInfo(char *outBUFFER, const uint16_t OutBUFFER_maxLen, const char* file, const char* function, int line);
+        void getNowTime(char* buffer, size_t len);
+
 }; // class ESP32Logger
 
 
 extern ESP32Logger lnLog; // defined in lnLogger_Class.cpp
-/*
+/* initializazione del logger
     Serial.begin(115200);
     delay(2000);
     lnLog.init();
@@ -92,7 +88,7 @@ extern ESP32Logger lnLog; // defined in lnLogger_Class.cpp
         #define    lnLOG_LEVEL_TRACE      7
         // Log Levels --- definiti come BUILD_FLAGS nel file: /home/loreto/filu/lnEnv/start_proc/piorun.sh
         // ma li metto qui nel caso non fossero intercettati correttamente
-        #pragma message "LOG_LEVEL_DEFAULT not DEFINED. Defaulting to lnLOG_LEVEL_WARN."
+        #pragma message "lnLOG_LEVEL_DEFAULT not DEFINED. Defaulting to lnLOG_LEVEL_WARN."
         #define lnLOG_LEVEL_DEFAULT lnLOG_LEVEL_WARN
     #endif
 
@@ -101,7 +97,7 @@ extern ESP32Logger lnLog; // defined in lnLogger_Class.cpp
         #define lnLOG_MODULE_LEVEL lnLOG_LEVEL_DEFAULT
         // #pragma message "LOG_MODULE_LEVEL not_defined"
     #else
-        #pragma message "LOG_MODULE_LEVEL defined"
+        #pragma message "lnLOG_MODULE_LEVEL defined"
     #endif
     // ---
 
