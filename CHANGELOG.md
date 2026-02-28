@@ -1,3 +1,8 @@
+## v1.1.5 - 2026-02-28
+
+### Fixes
+- eliminata dipendenza da EPS32time library Release 1.1.5
+
 ## v1.1.4 - 2026-02-26
 
 ### Fixes
