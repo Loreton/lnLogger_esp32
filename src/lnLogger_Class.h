@@ -29,7 +29,6 @@ class ESP32Logger { // Renamed from ESP32LoggerMutex for simplicity and clarity
         ESP32Logger(void);
         void init(const uint8_t line_buffer_len=128, const uint8_t filename_buffer_len=20);
         void write(const char* color, const char* tag, const char* file, const char* function, int line, const char* format, ...);
-        const char* msecToHMS(char *buffer, uint8_t buffer_len, uint32_t millisec, bool addMilliSec=false, bool stripHeader=false);
 
     private:
         char sharedTimeBUFFER[16];
@@ -41,6 +40,7 @@ class ESP32Logger { // Renamed from ESP32LoggerMutex for simplicity and clarity
         SemaphoreHandle_t m_logMutex = NULL; // The mutex to protect log operations
         const char* getFileLineInfo(char *outBUFFER, const uint16_t OutBUFFER_maxLen, const char* file, const char* function, int line);
         void getNowTime(char* buffer, size_t len);
+        // const char* msecToHMS(char *buffer, uint8_t buffer_len, uint32_t millisec, bool addMilliSec=false, bool stripHeader=false);
 
 }; // class ESP32Logger
 

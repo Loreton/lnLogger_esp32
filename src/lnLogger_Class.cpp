@@ -45,28 +45,28 @@ void ESP32Logger::init(const uint8_t line_buffer_len, const uint8_t filename_buf
 //    stripHeader = true: rimuove hour o minutes se == 0
 // ################################################################
 
-const char* ESP32Logger::msecToHMS(char *buffer, uint8_t buffer_len, uint32_t millisec, bool withMilliSec, bool stripHours) {
+// const char* ESP32Logger::msecToHMS(char *buffer, uint8_t buffer_len, uint32_t millisec, bool withMilliSec, bool stripHours) {
 
-    uint16_t msec    = (millisec % 1000UL);
-    uint32_t seconds = (millisec / 1000UL);
+//     uint16_t msec    = (millisec % 1000UL);
+//     uint32_t seconds = (millisec / 1000UL);
 
-    uint8_t sec      = (seconds  % 60);
-    uint8_t min      = (seconds / 60) % 60;
-    uint8_t hour     = (seconds / 3600);
+//     uint8_t sec      = (seconds  % 60);
+//     uint8_t min      = (seconds / 60) % 60;
+//     uint8_t hour     = (seconds / 3600);
 
-    if (withMilliSec) {
-        snprintf(buffer, buffer_len, "%02d:%02d:%02d.%03lu", hour, min, sec, msec); // snprintf() scrive al massimo n-1 caratteri più il terminatore nul (\0) in dest.
-    }
-    else {
-        snprintf(buffer, buffer_len, "%02d:%02d:%02d", hour, min, sec); // snprintf() scrive al massimo n-1 caratteri più il terminatore nul (\0) in dest.
-    }
+//     if (withMilliSec) {
+//         snprintf(buffer, buffer_len, "%02d:%02d:%02d.%03lu", hour, min, sec, msec); // snprintf() scrive al massimo n-1 caratteri più il terminatore nul (\0) in dest.
+//     }
+//     else {
+//         snprintf(buffer, buffer_len, "%02d:%02d:%02d", hour, min, sec); // snprintf() scrive al massimo n-1 caratteri più il terminatore nul (\0) in dest.
+//     }
 
-    if (stripHours && hour == 0)  {
-        return buffer+3;
-    }
+//     if (stripHours && hour == 0)  {
+//         return buffer+3;
+//     }
 
-    return buffer;
-}
+//     return buffer;
+// }
 
 
 void ESP32Logger::getNowTime(char* buffer, size_t len) {
