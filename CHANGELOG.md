@@ -1,3 +1,23 @@
+## v1.1.7 - 2026-03-11
+
+### Fixes
+- removed unused msecToHMS() method. migrated to lnTime library Release 1.1.6
+- preparazione README-md
+- eliminata dipendenza da EPS32time library Release 1.1.5
+- update on 2026.02.26 16:49:21
+- update on 2026.02.25 14:30:11 - Release 1.1.3
+- refactor internal macros - Release 1.1.3
+- update D2026-02-24T18.03
+- update D2026-02-24T17.54
+- modificati nomi delle macro di log
+- modificati nomi delle macro di log
+- refactor internal macros
+- update D2026-02-23T17.32
+- affinamenti rtc buffers e anche di colori
+- update D2026-02-22T17.09
+- inserito possibilità di avere o meno la funcion nel log
+- initial commit...
+
 ## v1.1.5 - 2026-02-28
 
 ### Fixes
